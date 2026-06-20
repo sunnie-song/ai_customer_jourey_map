@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闲鱼用户旅程图</title>
+<style>
+:root {
+  --bg: #F5F4F1;
+  --lane-bg: #FFFFFF;
+  --lane-alt: #FAFAF8;
+  --text: #1A1A1A;
+  --text-secondary: #5F5E5A;
+  --text-muted: #8B8A85;
+  --border: #DEDCD5;
+  --border-light: #EBE9E3;
+  --purple: #534AB7;
+  --orange: #D85A30;
+  --orange-light: #FAECE7;
+  --teal: #0F6E56;
+  --teal-light: #E1F5EE;
+  --amber: #BA7517;
+  --amber-light: #FAEEDA;
+  --red: #E24B4A;
+  --red-light: #FCEBEB;
+  --blue: #378ADD;
+  --blue-light: #E6F1FB;
+  --green: #3B6D11;
+  --green-light: #EAF3DE;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--text);
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+.top-bar { background: #1A1A1A; color: #FFF; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+.top-bar h1 { font-size: 15px; font-weight: 600; }
+.top-bar .meta { font-size: 11px; color: #999; }
+.tab-bar { display: flex; gap: 0; background: #FFF; border-bottom: 1px solid var(--border); padding: 0 32px; }
+.tab-btn { padding: 12px 24px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--text-secondary); border-bottom: 2px solid transparent; transition: all 0.15s; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--purple); border-bottom-color: var(--purple); }
+.map-wrapper { margin: 24px 32px; background: #FFF; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.map-scroll { overflow-x: auto; overflow-y: hidden; }
+.map-scroll::-webkit-scrollbar { height: 8px; }
+.map-scroll::-webkit-scrollbar-track { background: var(--bg); border-radius: 4px; }
+.map-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.phase-row { display: flex; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; background: #FFF; }
+.phase-label-cell { width: 120px; min-width: 120px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; background: #FAFAF8; }
+.phase-group { display: flex; flex-direction: column; flex-shrink: 0; }
+.phase-header { padding: 12px 0; text-align: center; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--border-light); }
+.phase-header.before { background: var(--orange-light); color: var(--orange); }
+.phase-header.during { background: var(--amber-light); color: var(--amber); }
+.phase-header.after { background: var(--teal-light); color: var(--teal); }
+.phase-stages { display: flex; }
+.stage-col { width: 160px; min-width: 160px; flex-shrink: 0; text-align: center; padding: 10px 8px; border-right: 1px solid var(--border-light); font-size: 11px; font-weight: 600; color: var(--text-secondary); line-height: 1.4; }
+.stage-col:last-child { border-right: none; }
+.lane-row { display: flex; border-bottom: 1px solid var(--border-light); }
+.lane-row:last-child { border-bottom: none; }
+.lane-label { width: 120px; min-width: 120px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; align-items: center; padding: 12px 14px; font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px; background: #FAFAF8; }
+.lane-label .lane-icon { margin-right: 6px; font-size: 14px; }
+.lane-content { display: flex; }
+.cell { width: 160px; min-width: 160px; flex-shrink: 0; padding: 12px 10px; border-right: 1px solid var(--border-light); font-size: 12px; line-height: 1.5; color: var(--text-secondary); display: flex; flex-direction: column; justify-content: center; }
+.cell:last-child { border-right: none; }
+.lane-row.alt .lane-label { background: #FFF; }
+.lane-row.alt .cell { background: var(--lane-alt); }
+.emotion-curve-cell { width: 160px; min-width: 160px; flex-shrink: 0; border-right: 1px solid var(--border-light); }
+.emotion-curve-cell:last-child { border-right: none; }
+.pain-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin: 2px 0; line-height: 1.5; background: var(--red-light); color: #791F1F; }
+.opp-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin: 2px 0; line-height: 1.5; background: var(--blue-light); color: #0C447C; }
+.quote-text { font-style: italic; color: var(--text-muted); position: relative; padding-left: 8px; border-left: 2px solid var(--purple); }
+.legend-bar { display: flex; gap: 24px; padding: 16px 32px; font-size: 12px; color: var(--text-muted); align-items: center; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+.footer { padding: 8px 32px 24px; font-size: 11px; color: var(--text-muted); text-align: right; }
+@media (max-width: 768px) {
+  .map-wrapper { margin: 12px 8px; border-radius: 8px; }
+  .phase-label-cell, .lane-label { width: 80px; min-width: 80px; font-size: 10px; }
+  .stage-col, .cell { width: 130px; min-width: 130px; font-size: 11px; }
+  .tab-bar, .top-bar, .legend-bar { padding-left: 12px; padding-right: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <h1>闲鱼用户旅程图</h1>
+  <div class="meta">由 Excel 自动生成 | 卖家 / 买家双旅程</div>
+</div>
+<div class="tab-bar"><button class="tab-btn" onclick="switchJourney('seller')" id="tab-seller">🏪 卖家旅程</button>
+<button class="tab-btn" onclick="switchJourney('buyer')" id="tab-buyer">🛒 买家旅程</button>
+</div>
+<div class="legend-bar">
+  <span>情绪图例：</span>
+  <div class="legend-item"><div class="legend-swatch" style="background:#3B6D11"></div>高满意度</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#BA7517"></div>中满意度</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#E24B4A"></div>低满意度</div>
+  <span style="margin-left:16px">标注图例：</span>
+  <div class="legend-item"><div class="legend-swatch" style="background:#FCEBEB;border:1px solid #F09595"></div>🔴 痛点</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#E6F1FB;border:1px solid #85B7EB"></div>🔵 机会点</div>
+</div>
+<div class="map-wrapper"><div class="map-scroll" id="map-scroll"></div></div>
+<div class="footer">闲鱼用户旅程图 · 数据来源：闲鱼用户旅程.xlsx · 生成日期 2026-06-20</div>
+<script>
+const JOURNEYS = [
+  {
+    "id": "seller",
+    "title": "卖家旅程",
+    "phase_groups": [
+      {
+        "name": "使用前",
+        "css": "before",
+        "stages": [
+          "决定卖出闲置",
+          "拍摄上传商品"
+        ],
+        "count": 2
+      },
+      {
+        "name": "使用中",
+        "css": "during",
+        "stages": [
+          "与买家沟通",
+          "达成交易",
+          "发货与物流"
+        ],
+        "count": 3
+      },
+      {
+        "name": "使用后",
+        "css": "after",
+        "stages": [
+          "买家确认收货",
+          "评价与复购"
+        ],
+        "count": 2
+      }
+    ],
+    "stages": [
+      {
+        "name": "决定卖出闲置",
+        "phase_label": "使用前",
+        "phase_group": "before",
+        "phase_css": "before",
+        "emotion": "high",
+        "emoji": "😁",
+        "action": "浏览闲鱼首页推荐 / 整理家中闲置物品",
+        "touchpoint": "闲鱼App、朋友推荐",
+        "thought": "这东西放着也是吃灰，不如卖点钱",
+        "pains": [],
+        "opps": [
+          "首页推荐「一键转卖」引导"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "拍摄上传商品",
+        "phase_label": "使用前",
+        "phase_group": "before",
+        "phase_css": "before",
+        "emotion": "mid",
+        "emoji": "😐",
+        "action": "拍照、编辑商品描述",
+        "touchpoint": "闲鱼拍照工具",
+        "thought": "怎么拍才能让人想买呢？",
+        "pains": [
+          "拍照流程繁琐，没有引导模板"
+        ],
+        "opps": [
+          "提供「智能识图+自动填描述」"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "与买家沟通",
+        "phase_label": "使用中",
+        "phase_group": "during",
+        "phase_css": "during",
+        "emotion": "low",
+        "emoji": "😞",
+        "action": "闲鱼聊天",
+        "touchpoint": "闲鱼IM",
+        "thought": "这个人是不是真心想买？",
+        "pains": [
+          "沟通效率低，遇到砍价或骗子"
+        ],
+        "opps": [
+          "AI辅助回复、信用分展示"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "达成交易",
+        "phase_label": "使用中",
+        "phase_group": "during",
+        "phase_css": "during",
+        "emotion": "mid",
+        "emoji": "😐",
+        "action": "确认价格、发货地址 / 打包商品",
+        "touchpoint": "闲鱼交易、快递",
+        "thought": "终于卖出去了，希望别出问题",
+        "pains": [
+          "担心买家收货后挑毛病"
+        ],
+        "opps": [
+          "交易保障提示、纠纷快速处理"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "发货与物流",
+        "phase_label": "使用中",
+        "phase_group": "during",
+        "phase_css": "during",
+        "emotion": "low",
+        "emoji": "😞",
+        "action": "填写运单号 / 去快递点寄出",
+        "touchpoint": "菜鸟裹裹、快递",
+        "thought": "运费比预期贵...",
+        "pains": [
+          "运费预估不准确，发货流程复杂"
+        ],
+        "opps": [
+          "一键叫快递、运费补贴"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "买家确认收货",
+        "phase_label": "使用后",
+        "phase_group": "after",
+        "phase_css": "after",
+        "emotion": "high",
+        "emoji": "😁",
+        "action": "查看收款状态",
+        "touchpoint": "闲鱼钱包、支付宝",
+        "thought": "钱到账了就好",
+        "pains": [
+          "到账时间有延迟感"
+        ],
+        "opps": [
+          "实时到账提醒"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "评价与复购",
+        "phase_label": "使用后",
+        "phase_group": "after",
+        "phase_css": "after",
+        "emotion": "mid",
+        "emoji": "😐",
+        "action": "写评价",
+        "touchpoint": "闲鱼评价",
+        "thought": "整体还行，下次还会用",
+        "pains": [
+          "评价流程被动，缺乏激励"
+        ],
+        "opps": [
+          "评价送优惠券、推荐类似商品"
+        ],
+        "feeling": ""
+      }
+    ]
+  },
+  {
+    "id": "buyer",
+    "title": "买家旅程",
+    "phase_groups": [
+      {
+        "name": "使用前",
+        "css": "before",
+        "stages": [
+          "产生购买需求",
+          "筛选比较商品"
+        ],
+        "count": 2
+      },
+      {
+        "name": "使用中",
+        "css": "during",
+        "stages": [
+          "与卖家沟通",
+          "下单支付",
+          "等待收货"
+        ],
+        "count": 3
+      },
+      {
+        "name": "使用后",
+        "css": "after",
+        "stages": [
+          "验货与确认",
+          "评价与分享"
+        ],
+        "count": 2
+      }
+    ],
+    "stages": [
+      {
+        "name": "产生购买需求",
+        "phase_label": "使用前",
+        "phase_group": "before",
+        "phase_css": "before",
+        "emotion": "high",
+        "emoji": "😁",
+        "action": "搜索关键词、浏览推荐 / 和朋友聊想买什么",
+        "touchpoint": "闲鱼搜索、首页推荐",
+        "thought": "想找个便宜的二手XX，闲鱼上应该有",
+        "pains": [],
+        "opps": [
+          "搜索联想、热门品类引导"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "筛选比较商品",
+        "phase_label": "使用前",
+        "phase_group": "before",
+        "phase_css": "before",
+        "emotion": "mid",
+        "emoji": "😐",
+        "action": "对比价格、看成色、看卖家信用",
+        "touchpoint": "闲鱼列表、商品详情",
+        "thought": "这个价格合理吗？这卖家靠谱吗？",
+        "pains": [
+          "商品信息不统一，真假难辨"
+        ],
+        "opps": [
+          "标准化成色描述、验货服务"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "与卖家沟通",
+        "phase_label": "使用中",
+        "phase_group": "during",
+        "phase_css": "during",
+        "emotion": "mid",
+        "emoji": "😐",
+        "action": "闲鱼聊天",
+        "touchpoint": "闲鱼IM",
+        "thought": "能不能再便宜点？",
+        "pains": [
+          "议价过程耗时，怕被坑"
+        ],
+        "opps": [
+          "合理议价引导、历史成交价参考"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "下单支付",
+        "phase_label": "使用中",
+        "phase_group": "during",
+        "phase_css": "during",
+        "emotion": "high",
+        "emoji": "😁",
+        "action": "点击购买、支付",
+        "touchpoint": "支付宝",
+        "thought": "希望东西和描述一样",
+        "pains": [],
+        "opps": [
+          "担保交易说明透明化"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "等待收货",
+        "phase_label": "使用中",
+        "phase_group": "during",
+        "phase_css": "during",
+        "emotion": "low",
+        "emoji": "😞",
+        "action": "查看物流进度 / 收快递",
+        "touchpoint": "菜鸟裹裹、物流追踪",
+        "thought": "怎么还没到？",
+        "pains": [
+          "物流信息更新不及时"
+        ],
+        "opps": [
+          "物流异常主动预警"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "验货与确认",
+        "phase_label": "使用后",
+        "phase_group": "after",
+        "phase_css": "after",
+        "emotion": "high",
+        "emoji": "😁",
+        "action": "确认收货 / 开箱检查商品",
+        "touchpoint": "闲鱼确认收货",
+        "thought": "和描述一致，满意！",
+        "pains": [
+          "发现货不对版时维权流程复杂"
+        ],
+        "opps": [
+          "「开箱验货」引导、快速维权"
+        ],
+        "feeling": ""
+      },
+      {
+        "name": "评价与分享",
+        "phase_label": "使用后",
+        "phase_group": "after",
+        "phase_css": "after",
+        "emotion": "mid",
+        "emoji": "😐",
+        "action": "写评价、晒图",
+        "touchpoint": "闲鱼评价、社交分享",
+        "thought": "买到好东西，推荐给朋友",
+        "pains": [
+          "分享路径长，缺乏晒单激励"
+        ],
+        "opps": [
+          "一键生成晒单图、社区精选"
+        ],
+        "feeling": ""
+      }
+    ]
+  }
+];
+let currentTab = 'seller';
+
+function renderMap(journey) {
+  const container = document.getElementById('map-scroll');
+  let html = '';
+
+  // 阶段头部行
+  html += '<div class="phase-row">';
+  html += '<div class="phase-label-cell">阶段</div>';
+  for (const pg of journey.phase_groups) {
+    html += '<div class="phase-group">';
+    html += '<div class="phase-header ' + pg.css + '" style="width:' + (pg.count * 160) + 'px">' + pg.name + '</div>';
+    html += '<div class="phase-stages">';
+    for (const sn of pg.stages) {
+      const full = journey.stages.find(s => s.name === sn);
+      html += '<div class="stage-col">' + (full ? full.emoji + ' ' : '') + sn + '</div>';
+    }
+    html += '</div></div>';
+  }
+  html += '</div>';
+
+  // 泳道 1: 用户行为
+  html += '<div class="lane-row">';
+  html += '<div class="lane-label"><span class="lane-icon">👤</span>用户行为</div>';
+  html += '<div class="lane-content">';
+  for (const s of journey.stages) {
+    html += '<div class="cell">' + esc(s.action) + '</div>';
+  }
+  html += '</div></div>';
+
+  // 泳道 2: 触点/渠道
+  html += '<div class="lane-row alt">';
+  html += '<div class="lane-label"><span class="lane-icon">📍</span>触点 / 渠道</div>';
+  html += '<div class="lane-content">';
+  for (const s of journey.stages) {
+    html += '<div class="cell">' + esc(s.touchpoint) + '</div>';
+  }
+  html += '</div></div>';
+
+  // 泳道 3: 用户想法
+  html += '<div class="lane-row">';
+  html += '<div class="lane-label"><span class="lane-icon">💬</span>用户想法</div>';
+  html += '<div class="lane-content">';
+  for (const s of journey.stages) {
+    html += '<div class="cell"><div class="quote-text">"' + esc(s.thought) + '"</div></div>';
+  }
+  html += '</div></div>';
+
+  // 泳道 4: 情绪曲线
+  html += '<div class="lane-row alt">';
+  html += '<div class="lane-label"><span class="lane-icon">📊</span>情绪曲线</div>';
+  html += '<div class="lane-content">';
+  for (const s of journey.stages) {
+    const label = s.emotion === 'high' ? '满意' : s.emotion === 'mid' ? '一般' : '不满';
+    const h = s.emotion === 'high' ? 52 : s.emotion === 'mid' ? 32 : 16;
+    const barColor = s.emotion === 'high' ? '#3B6D11' : s.emotion === 'mid' ? '#BA7517' : '#E24B4A';
+    html += '<div class="emotion-curve-cell" style="display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;">';
+    html += '<div style="text-align:center;">';
+    html += '<div style="font-size:22px;margin-bottom:4px;">' + s.emoji + '</div>';
+    html += '<div style="width:8px;height:' + h + 'px;border-radius:4px;background:' + barColor + ';margin:0 auto 4px;"></div>';
+    html += '<div style="font-size:10px;color:var(--text-muted)">' + label + '</div>';
+    html += '</div></div>';
+  }
+  html += '</div></div>';
+
+  // 泳道 5: 痛点
+  html += '<div class="lane-row">';
+  html += '<div class="lane-label"><span class="lane-icon">🔴</span>痛点</div>';
+  html += '<div class="lane-content">';
+  for (const s of journey.stages) {
+    html += '<div class="cell">';
+    for (const p of s.pains) {
+      html += '<span class="pain-tag">' + esc(p) + '</span>';
+    }
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  // 泳道 6: 机会点
+  html += '<div class="lane-row alt">';
+  html += '<div class="lane-label"><span class="lane-icon">🔵</span>机会点</div>';
+  html += '<div class="lane-content">';
+  for (const s of journey.stages) {
+    html += '<div class="cell">';
+    for (const o of s.opps) {
+      html += '<span class="opp-tag">' + esc(o) + '</span>';
+    }
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  container.innerHTML = html;
+}
+
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function switchJourney(id) {
+  currentTab = id;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  const j = JOURNEYS.find(j => j.id === id);
+  if (j) renderMap(j);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  switchJourney(currentTab);
+});
+</script>
+</body>
+</html>
