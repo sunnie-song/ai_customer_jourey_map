@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel → Python → HTML：AI 驱动的可维护数据可视化工作流</title>
+<style>
+/* ============================================================
+   Design System · 焦点叙事 · 增强版
+   ============================================================ */
+:root {
+  --bg: #FBFBF9;
+  --card: #FFFFFF;
+  --text: #18181B;
+  --text2: #4A4A52;
+  --text3: #8C8C96;
+  --accent: #4A3DE0;
+  --accent2: #6B5FED;
+  --accent-light: #F2F0FF;
+  --accent-glow: rgba(74,61,224,0.06);
+  --orange: #D85A30;
+  --orange-light: #FFF4F0;
+  --green: #0B6D50;
+  --green-light: #EDF8F3;
+  --red: #DC3E3A;
+  --red-light: #FFF4F4;
+  --blue: #3588D6;
+  --blue-light: #EDF5FC;
+  --amber: #B5771A;
+  --amber-light: #FFFAF2;
+  --border: #E8E6E1;
+  --border-light: #F1F0EB;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --shadow-xs: 0 1px 3px rgba(0,0,0,0.025);
+  --shadow-sm: 0 2px 10px rgba(0,0,0,0.035);
+  --shadow: 0 4px 24px rgba(0,0,0,0.065);
+  --shadow-lg: 0 14px 44px rgba(0,0,0,0.11);
+  --shadow-xl: 0 24px 64px rgba(0,0,0,0.15);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; scroll-padding-top:80px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background:var(--bg); color:var(--text);
+  -webkit-font-smoothing:antialiased; line-height:1.7;
+}
+
+/* ============================================================
+   Navigation
+   ============================================================ */
+.nav {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  background:rgba(251,251,249,0.82); backdrop-filter:blur(24px) saturate(1.4);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border-bottom:1px solid transparent;
+  padding:14px 40px; display:flex; align-items:center; justify-content:space-between;
+  transition:all 0.3s var(--ease);
+}
+.nav.scrolled {
+  border-bottom-color:rgba(0,0,0,0.05);
+  box-shadow:0 2px 24px rgba(0,0,0,0.04);
+  background:rgba(251,251,249,0.94);
+}
+.nav-logo {
+  font-size:14px; font-weight:750; color:var(--accent);
+  letter-spacing:-0.3px; display:flex; align-items:center; gap:6px;
+}
+.nav-links { display:flex; gap:32px; }
+.nav-links a {
+  font-size:13px; color:var(--text3); text-decoration:none; font-weight:500;
+  position:relative; padding:4px 0; transition:color 0.2s var(--ease);
+}
+.nav-links a::after {
+  content:''; position:absolute; bottom:0; left:0; right:0;
+  height:2px; background:var(--accent); border-radius:1px;
+  transform:scaleX(0); transform-origin:left;
+  transition:transform 0.25s var(--ease);
+}
+.nav-links a:hover { color:var(--text); }
+.nav-links a:hover::after { transform:scaleX(1); }
+
+/* ============================================================
+   Section Layout
+   ============================================================ */
+section { padding:100px 0; position:relative; }
+section.light-bg { background:#FFF; }
+section.light-bg::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(0,0,0,0.04), transparent);
+}
+.inner { max-width:920px; margin:0 auto; padding:0 40px; }
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero {
+  padding-top:180px; padding-bottom:100px; text-align:center;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 30%, var(--accent-glow), transparent),
+    radial-gradient(circle 400px at 15% 85%, rgba(11,109,80,0.018), transparent),
+    radial-gradient(circle 350px at 85% 15%, rgba(74,61,224,0.014), transparent);
+  position:relative; overflow:hidden;
+}
+.hero::after {
+  content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+  width:120px; height:2px; background:linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity:0.12; border-radius:1px;
+}
+.hero-badge {
+  display:inline-flex; align-items:center; gap:7px;
+  background:var(--accent-light); color:var(--accent);
+  padding:5px 15px; border-radius:100px; font-size:12.5px; font-weight:650;
+  margin-bottom:32px; border:1px solid rgba(74,61,224,0.07);
+  transition:box-shadow 0.3s var(--ease);
+}
+.hero-badge:hover { box-shadow:0 0 0 6px rgba(74,61,224,0.04); }
+.hero-badge .dot {
+  width:8px; height:8px; border-radius:50%; background:var(--accent);
+  animation:pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:0.25;transform:scale(0.75)}
+}
+.hero h1 {
+  font-size:58px; font-weight:850; letter-spacing:-1.6px; line-height:1.15;
+  margin-bottom:24px;
+}
+.hero h1 .hl {
+  background:linear-gradient(135deg, var(--accent) 0%, #7F74F0 50%, var(--accent) 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:shimmer 5s linear infinite;
+}
+@keyframes shimmer {
+  0%{background-position:0% center}
+  50%{background-position:200% center}
+  100%{background-position:0% center}
+}
+.hero p.sub {
+  font-size:18px; color:var(--text2); max-width:620px; margin:0 auto 32px;
+  line-height:1.75;
+}
+.hero a[href] {
+  display:inline-flex; align-items:center; gap:6px;
+  color:var(--accent); font-size:14px; font-weight:650;
+  text-decoration:none; padding:10px 24px;
+  border:1.5px solid rgba(74,61,224,0.15);
+  border-radius:100px; transition:all 0.25s var(--ease);
+  background:rgba(74,61,224,0.02);
+}
+.hero a[href]:hover {
+  background:var(--accent-light);
+  border-color:rgba(74,61,224,0.25);
+  transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(74,61,224,0.10);
+}
+
+/* ============================================================
+   Section Headings
+   ============================================================ */
+.sec-label {
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:11.5px; font-weight:750; letter-spacing:1.6px;
+  color:var(--accent); margin-bottom:14px;
+}
+.sec-label::after {
+  content:''; display:inline-block; width:22px; height:1.5px;
+  background:var(--accent); opacity:0.25; border-radius:1px;
+}
+.sec-title { font-size:36px; font-weight:780; letter-spacing:-0.5px; margin-bottom:14px; line-height:1.3; }
+.sec-desc { font-size:16px; color:var(--text2); max-width:680px; margin-bottom:44px; line-height:1.75; }
+
+/* ============================================================
+   Cards (Universal)
+   ============================================================ */
+.cards { display:grid; gap:20px; }
+.cards-2 { grid-template-columns:1fr 1fr; }
+.cards-3 { grid-template-columns:1fr 1fr 1fr; }
+.card {
+  background:var(--card); border-radius:var(--radius);
+  padding:34px 30px; border:1px solid var(--border);
+  box-shadow:var(--shadow-xs);
+  transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease), border-color 0.3s var(--ease);
+  position:relative; overflow:hidden;
+}
+.card::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity:0; transition:opacity 0.3s var(--ease);
+}
+.card:hover {
+  transform:translateY(-4px);
+  box-shadow:var(--shadow-lg);
+  border-color:var(--border-light);
+}
+.card:hover::after { opacity:0.15; }
+.card-icon { font-size:36px; margin-bottom:14px; display:block; line-height:1; }
+.card h3 { font-size:17px; font-weight:750; margin-bottom:8px; color:var(--text); }
+.card p { font-size:14px; color:var(--text2); line-height:1.7; }
+
+/* Pain cards specific — wider spacing */
+#pain .card { padding:40px 34px; }
+#pain .card:hover { transform:translateY(-6px); }
+
+/* ============================================================
+   Pipeline Diagram
+   ============================================================ */
+.pipeline {
+  display:flex; align-items:center; justify-content:center; gap:0;
+  margin:56px 0; flex-wrap:wrap; position:relative;
+}
+.pipeline::before {
+  content:''; position:absolute; top:50%; left:8%; right:8%; height:2px;
+  background:linear-gradient(90deg,
+    transparent 0%, var(--border) 15%, var(--accent) 50%, var(--border) 85%, transparent 100%);
+  opacity:0.35; z-index:0; border-radius:1px;
+}
+.pipe-node {
+  background:var(--card); border:1.5px solid var(--border);
+  border-radius:var(--radius); padding:28px 24px; text-align:center;
+  min-width:134px; box-shadow:var(--shadow-xs); position:relative; z-index:1;
+  transition:all 0.35s var(--ease);
+}
+.pipe-node:hover { transform:translateY(-5px); box-shadow:var(--shadow-lg); }
+.pipe-node.source { border-color:#E0DED7; background:#FDFDFC; }
+.pipe-node.script {
+  border-color:var(--accent); border-width:2px; background:var(--accent-light);
+  box-shadow:0 0 0 6px var(--accent-glow);
+}
+.pipe-node.output {
+  border-color:var(--green); border-width:2px; background:var(--green-light);
+  box-shadow:0 0 0 6px rgba(11,109,80,0.04);
+}
+.pipe-node .icon { font-size:36px; margin-bottom:8px; display:block; transition:transform 0.3s var(--ease); }
+.pipe-node:hover .icon { transform:scale(1.12); }
+.pipe-node .name { font-size:13.5px; font-weight:750; color:var(--text); }
+.pipe-node .detail { font-size:11.5px; color:var(--text3); margin-top:3px; }
+.pipe-node .file {
+  font-family:"SF Mono","Fira Code","Menlo",monospace; font-size:11px;
+  color:var(--text2); margin-top:6px;
+  background:rgba(0,0,0,0.03); padding:3px 10px; border-radius:5px;
+  display:inline-block; letter-spacing:0.2px;
+}
+.pipe-arrow {
+  font-size:26px; color:var(--text3); margin:0 16px; font-weight:100;
+  position:relative; z-index:1; opacity:0.4;
+}
+
+/* ============================================================
+   Highlight Box
+   ============================================================ */
+.hl-box {
+  background:var(--accent-light); border-radius:var(--radius);
+  padding:30px 34px; border:1px solid rgba(74,61,224,0.09);
+  margin:32px 0; position:relative; overflow:hidden;
+}
+.hl-box::before {
+  content:''; position:absolute; top:-40px; right:-40px;
+  width:100px; height:100px; border-radius:50%;
+  background:rgba(74,61,224,0.025); pointer-events:none;
+}
+.hl-box h4 { font-size:15px; font-weight:750; color:var(--accent); margin-bottom:8px; }
+.hl-box p { font-size:14px; color:var(--text2); line-height:1.75; padding-bottom: 10px; }
+
+/* ============================================================
+   Demo Preview
+   ============================================================ */
+.demo-wrap {
+  background:var(--card); border-radius:var(--radius);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow-xl), 0 0 0 1px rgba(0,0,0,0.02);
+  overflow:hidden; transition:all 0.35s var(--ease);
+}
+.demo-wrap:hover {
+  box-shadow:0 20px 56px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.02);
+  transform:translateY(-2px);
+}
+.demo-titlebar {
+  background:linear-gradient(160deg, #1C1C22, #26262F);
+  color:#E8E8EF; padding:14px 24px;
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:12.5px; font-weight:500; letter-spacing:0.3px;
+  user-select:none;
+}
+.demo-titlebar .traffic { display:flex; gap:7px; }
+.demo-titlebar .traffic div { width:11px; height:11px; border-radius:50%; opacity:0.85; flex-shrink:0; }
+.demo-titlebar .traffic .t-r { background:#EE5A56; }
+.demo-titlebar .traffic .t-y { background:#F0B840; }
+.demo-titlebar .traffic .t-g { background:#3EC876; }
+.demo-body { height:560px; background:#F7F7F9; }
+.demo-body iframe { width:100%; height:100%; border:none; }
+
+/* ============================================================
+   Maintenance Comparison
+   ============================================================ */
+.update-seq { display:flex; flex-direction:column; gap:12px; }
+.update-step {
+  display:flex; align-items:flex-start; gap:16px;
+  padding:22px 24px; border-radius:var(--radius-sm);
+  border:1px solid var(--border-light);
+  transition:all 0.3s var(--ease);
+  position:relative; overflow:hidden;
+}
+.update-step::after {
+  content:''; position:absolute; top:0; left:0; bottom:0; width:3px;
+  border-radius:3px 0 0 3px;
+  transition:opacity 0.3s var(--ease);
+  opacity:0;
+}
+.update-step:hover { transform:translateX(3px); }
+.update-step:hover::after { opacity:1; }
+.update-step.old { background:#FFF9F8; border-left:4px solid var(--red); }
+.update-step.old::after { background:var(--red); }
+.update-step.new { background:#F8FCFA; border-left:4px solid var(--green); }
+.update-step.new::after { background:var(--green); }
+.update-step .step-num {
+  width:40px; height:40px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:750; flex-shrink:0;
+  transition:all 0.3s var(--ease-spring);
+}
+.update-step:hover .step-num { transform:scale(1.1); }
+.update-step.old .step-num { background:var(--red-light); color:var(--red); }
+.update-step.new .step-num { background:var(--green-light); color:var(--green); }
+.update-step .step-text { flex:1; }
+.update-step .step-text h4 { font-size:14.5px; font-weight:750; margin-bottom:4px; }
+.update-step .step-text p { font-size:13.5px; color:var(--text2); line-height:1.6; }
+.update-step .step-text .cmd {
+  font-size:12.5px; font-family:"SF Mono","Fira Code","Menlo",monospace;
+  background:rgba(0,0,0,0.045); padding:5px 12px; border-radius:var(--radius-xs);
+  display:inline-block; margin-top:8px; letter-spacing:0.3px;
+  color:var(--accent); font-weight:550;
+  transition:background 0.2s var(--ease);
+}
+.update-step:hover .step-text .cmd { background:rgba(0,0,0,0.07); }
+
+/* Tag inside comparison cards */
+#maintenance .card { padding:32px 30px; }
+
+/* ============================================================
+   Tags
+   ============================================================ */
+.tag {
+  display:inline-block; padding:4px 12px; border-radius:var(--radius-xs);
+  font-size:12px; font-weight:650; letter-spacing:0.3px;
+}
+.tag.g { background:var(--green-light); color:#0A543D; }
+.tag.r { background:var(--red-light); color:#A82825; }
+.tag.b { background:var(--blue-light); color:var(--blue); }
+.tag.o { background:var(--orange-light); color:var(--orange); }
+
+/* ============================================================
+   CTA Block
+   ============================================================ */
+.cta-block {
+  background:linear-gradient(150deg, #3F34CE, #574BEA 40%, #6A5FF0);
+  color:#FFF; text-align:center; padding:84px 48px;
+  border-radius:var(--radius); margin-top:24px;
+  position:relative; overflow:hidden;
+  box-shadow:0 8px 40px rgba(74,61,224,0.18);
+}
+.cta-block::before {
+  content:''; position:absolute; top:-80px; right:-80px;
+  width:260px; height:260px; border-radius:50%;
+  background:rgba(255,255,255,0.03); pointer-events:none;
+}
+.cta-block::after {
+  content:''; position:absolute; bottom:-40px; left:15%;
+  width:180px; height:180px; border-radius:50%;
+  background:rgba(255,255,255,0.025); pointer-events:none;
+}
+.cta-block h2 { font-size:34px; font-weight:800; margin-bottom:14px; letter-spacing:-0.5px; position:relative; }
+.cta-block p {
+  font-size:16px; opacity:0.88; margin-bottom:34px;
+  max-width:540px; margin-left:auto; margin-right:auto;
+  line-height:1.75; position:relative;
+}
+.cta-block a {
+  display:inline-flex; align-items:center; gap:8px;
+  background:#FFF; color:#3F34CE; padding:15px 38px;
+  border-radius:100px; font-size:15px; font-weight:750;
+  text-decoration:none; letter-spacing:0.3px;
+  transition:all 0.3s var(--ease); position:relative;
+  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
+.cta-block a:hover {
+  transform:translateY(-3px);
+  box-shadow:0 14px 32px rgba(0,0,0,0.22);
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.footer {
+  text-align:center; padding:44px 20px;
+  color:var(--text3); font-size:13px;
+  border-top:1px solid var(--border); margin-top:100px;
+  background:linear-gradient(to bottom, transparent, rgba(0,0,0,0.008));
+}
+
+/* ============================================================
+   Scroll Animations
+   ============================================================ */
+.animate-on-scroll {
+  opacity:0; transform:translateY(28px);
+  transition:
+    opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.animate-on-scroll.visible { opacity:1; transform:translateY(0); }
+.animate-on-scroll.delay-1 { transition-delay:0.08s; }
+.animate-on-scroll.delay-2 { transition-delay:0.16s; }
+.animate-on-scroll.delay-3 { transition-delay:0.24s; }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width:768px) {
+  .hero h1 { font-size:30px; }
+  .hero { padding-top:130px; padding-bottom:72px; }
+  .sec-title { font-size:25px; }
+  .sec-desc { font-size:14.5px; }
+  .cards-2,.cards-3,.cap-grid { grid-template-columns:1fr; }
+  .nav { padding:12px 20px; }
+  .nav-links { display:none; }
+  .inner { padding:0 20px; }
+  section { padding:64px 0; }
+  .pipeline {
+    flex-direction:column; gap:0;
+  }
+  .pipe-arrow { transform:rotate(90deg); margin:10px 0; font-size:20px; }
+  .pipeline::before { display:none; }
+  .pipe-node { min-width:100%; padding:22px 20px; }
+  .cta-block { padding:56px 28px; border-radius:var(--radius-sm); }
+  .cta-block h2 { font-size:25px; }
+  .cta-block a { padding:13px 28px; font-size:14px; }
+  .demo-body { height:400px; }
+  .card { padding:24px 20px; }
+  .hl-box { padding:22px 24px; }
+  .update-step { padding:18px 20px; }
+}
+
+@media (min-width:1400px) {
+  .inner { max-width:1040px; }
+  .hero h1 { font-size:64px; }
+  .demo-body { height:640px; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Nav scroll effect
+  const nav = document.querySelector('.nav');
+  window.addEventListener('scroll', function() {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // Scroll-triggered animations
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  // Animate: section headings, cards, pipeline nodes, demo, etc.
+  document.querySelectorAll(
+    '.sec-desc, .cards .card, .pipeline .pipe-node, .hl-box, .cap-item, ' +
+    '.update-step, .demo-wrap'
+  ).forEach(function(el) {
+    el.classList.add('animate-on-scroll');
+    observer.observe(el);
+  });
+});
+</script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">⚡ 顾客旅程 AI实战分享</div>
+  <div class="nav-links">
+    <a href="#pain">痛点</a>
+    <a href="#think">核心思路</a>
+    <a href="#maintenance">维护故事</a>
+     <a href="#demo">Demo</a>
+    <a href="#more">更多场景</a>
+  </div>
+</nav>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+  <div class="inner">
+    <div class="hero-badge"><span class="dot"></span> 顾客旅程  · AI 实战 Demo</div>
+    <h1>Excel → Python → HTML<br> AI 生成的<span class="hl">顾客旅程</span></h1>
+    <p class="sub">以<strong>闲鱼用户旅程图</strong>为例——AI 把 Excel 数据变成可交互的 HTML 看板，并生成可复用的 Python 脚本。<br>从此数据更新 ≠ 重新画图。</p>
+    <a href="journey_map.html" target="_blank">👆 先看看旅程图 Demo 长什么样 →</a>
+  </div>
+
+</section>
+
+
+<!-- ==================== 痛点 ==================== -->
+<section id="pain" style="background:#FFF;">
+  <div class="inner">
+    <div class="sec-label">▸ 为什么需要这个方案</div>
+    <h2 class="sec-title">用户旅程图最痛的，从来不是「第一次画」</h2>
+    <p class="sec-desc">做过用户旅程图的人都知道——第一版画出来只是开始。用户研究是<strong>迭代</strong>的：每一次修改，传统方式都要重来一遍。</p>
+
+    <div class="cards cards-2">
+      <div class="card">
+        <span class="card-icon">🔁</span>
+        <h3>专业的画图工具，门槛高</h3>
+        <p> Figma 工具使用门槛，对非专业人士来说较高。</p>
+      </div>
+    
+      <div class="card">
+        <span class="card-icon">🤝</span>
+        <h3>效率太低，重复工作</h3>
+         <p>Figma 更新，全部要手动更新，每一个改动都是一个新的工作周期。</p>
+       </div>
+     
+    </div>
+  </div>
+</section>
+<!-- ==================== 工作流全景 ==================== -->
+<section>
+  <div id="think" class="inner">
+    <div class="sec-label">▸ 核心思路</div>
+    <h2 class="sec-title">一条指令，三个文件，一次搭建，永久复用</h2>
+    <p class="sec-desc">这个项目的本质不是「AI 画了一张图」，而是<strong>AI 搭建了一条从数据到可视化的自动化流水线</strong>。Excel 是唯一的真相来源，Python 是自动化的桥梁，HTML 是永远新鲜的可交付物。</p>
+
+  
+
+    <div class="hl-box">
+      <h4>这是怎么生成的？</h4>
+      <p>用户对 AI 说了一句话：<em>「帮我生成一个 Excel，里面有卖家旅程和买家旅程，使用前/中/后三个大阶段，包含线上行为、线下行为、触点/渠道、用户想法、情绪、痛点、机会点。」</em></p>
+      <p>用户对 AI 说了一句话：<em>「帮我读取这个基于这个Excel， 生成一个顾客旅程 HTML 页面」</em></p>
+      <p>用户对 AI 说了一句话：<em>「生成一个Python 文件，每次执行文件可以将Excel 数据转换为HTML 页面」</em></p>
+    </div>
+       <div class="pipeline">
+      <div class="pipe-node source">
+        <span class="icon">📄</span>
+        <div class="name">数据源（唯一真相）</div>
+        <div class="detail">运营人员维护</div>
+        <div class="file">闲鱼用户旅程.xlsx</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node script">
+        <span class="icon">🐍</span>
+        <div class="name">转换脚本（AI 生成）</div>
+        <div class="detail">读取 → 解析 → 生成</div>
+        <div class="file">generate_html.py</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node output">
+        <span class="icon">✨</span>
+        <div class="name">可交付物（自动刷新）</div>
+        <div class="detail">交互式看板，随时分享</div>
+        <div class="file">journey_map.html</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- ==================== 维护故事：Before vs After ==================== -->
+<section id="maintenance">
+  <div class="inner">
+    <div class="sec-label">▸ 维护对比</div>
+    <h2 class="sec-title">当数据发生变化时……</h2>
+    <p class="sec-desc">假设你需要在「与买家沟通」阶段新增一个痛点、把「等待收货」阶段的情绪从「一般」改为「不满」，再给「筛选比较商品」阶段补充一条用户想法。</p>
+
+    <div class="cards cards-2">
+      <div class="card" style="border-left:4px solid var(--red);">
+        <h3 style="color:var(--red); margin-bottom:16px;">🔴 传统方式的修改流程</h3>
+        <div class="update-seq">
+          <div class="update-step old">
+            <div class="step-num">3</div>
+            <div class="step-text"><h4>如果用的是 PPT（30-60 分钟）</h4><p>找到对应页面 → 手动改文本框 → 调布局 → 情绪换颜色 → 检查有没有漏掉的。版本号+1。</p></div>
+          </div>
+          <div style="margin-top:10px;"><span class="tag r">⏱️ 总耗时：30-60 分钟</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-left:4px solid var(--green);">
+        <h3 style="color:var(--green); margin-bottom:16px;">🟢 AI 管线的修改流程</h3>
+        <div class="update-seq">
+          <div class="update-step new">
+            <div class="step-num">1</div>
+            <div class="step-text"><h4>打开 Excel 改数据（5 分钟）</h4><p>在对应单元格修改内容，保存。步骤完全一样。</p></div>
+          </div>
+          <div class="update-step new">
+            <div class="step-num">2</div>
+            <div class="step-text"><h4>运行一条命令（5 秒）</h4><p><span class="cmd">python generate_html.py</span></p></div>
+          </div>
+          <div class="update-step new">
+            <div class="step-num">3</div>
+            <div class="step-text"><h4>完成（0 秒）</h4><p>HTML 已自动更新。刷新浏览器 → 所有修改都已生效。不需要任何人帮忙。</p></div>
+          </div>
+          <div style="margin-top:10px;"><span class="tag g">⏱️ 总耗时：5 分钟</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+
+<!-- ==================== Live Demo ==================== -->
+<section id="demo">
+  <div class="inner">
+    <div class="sec-label">▸ 成果展示</div>
+    <h2 class="sec-title">打开看板，试试切换旅程</h2>
+    <p class="sec-desc">这就是 <span class="cmd" style="font-size:12px;">python generate_html.py</span> 一行命令生成的最终成果。点击 Tab 切换查看<strong>卖家旅程</strong>和<strong>买家旅程</strong>，每个阶段的情绪、痛点、机会点一目了然。</p>
+
+    <div class="demo-wrap">
+      <div class="demo-titlebar">
+        <div class="traffic"><div class="t-r"></div><div class="t-y"></div><div class="t-g"></div></div>
+        <span>闲鱼用户旅程图 · journey_map.html</span>
+        <span style="color:#888;font-size:11px;">实时预览</span>
+      </div>
+      <div class="demo-body">
+        <iframe src="journey_map.html" title="闲鱼用户旅程图 Demo"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ==================== CTA ==================== -->
+<section>
+  <div id="more" class="inner">
+    <div class="cta-block">
+      <h2>现在，想想你自己有什么 Excel</h2>
+      <p>每个人电脑里都躺着几十个 Excel 文件——周报数据、竞品清单、用户反馈、活动复盘、SOP 流程表……它们每一个，都可以变成一条自动化工作流。</p>
+   
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  <p>AI 提效实战分享 · 闲鱼用户旅程 Demo（脱敏演示数据）· 2026.06</p>
+  <p style="margin-top:3px;">这个页面本身也是 AI 生成的 —— Excel → Python → HTML 模式同样适用于演示文稿 ✨</p>
+</div>
+
+</body>
+</html>
